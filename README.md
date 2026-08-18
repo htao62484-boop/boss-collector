@@ -1,69 +1,86 @@
-# BOSS 有交换采集插件（Edge/Chrome）
+# BOSS 采集助手（Edge/Chrome 插件）
 
-这个目录是浏览器插件版本，目标是让采集开箱即用，不依赖本地 Python 运行。
+BOSS 直聘浏览器插件，支持两种模式：**求职端采集** 与 **招聘端关键字自动打招呼**。开箱即用，不依赖本地 Python 环境。
 
-## 功能
+## 功能总览
 
-- 消息页增量采集（优先“有交换”）
+### 模式一：求职端采集（原版）
+
+- 消息页增量采集（优先「有交换」列表）
 - 当前处理会话高亮
-- 账号隔离ID（同一插件内可切 `boss_a` / `boss_b`，数据互不混淆）
+- 账号隔离 ID（同一插件内可切 `boss_a` / `boss_b`，数据互不混淆）
 - 本地去重存储（IndexedDB）
 - 会话签名断点续跑（避免重复刷旧会话）
 - 一键导出 CSV（含序号列）
 
-## 去重规则
+### 模式二：招聘端关键字自动打招呼（新增）
 
-- 有微信：`wx:{微信号}`
-- 否则有电话：`tel:{电话}`
-- 否则：`namejob:{HR姓名}_{岗位名称}`
+- 面向**招聘者账号**，输入关键字（如「普拉提」）后自动遍历「推荐牛人」候选人
+- 流程：点开候选人详情页 → 读取简历正文 → **命中关键字才打招呼**，未命中跳过
+- 绝不无差别群发，打招呼次数珍贵，只打真正匹配的人
+- 匹配范围：职位、工作描述、个人优势、教育经历；**排除**「期望职位」和「同事沟通进度」区块（同事沟通记录不算候选人自身匹配）
+- 公司名/门店名含关键字不算本人命中（自动剥离公司名再匹配）
+- 命中时日志显示关键字所在段落与前后文，方便核对
+- 单候选人异常自动跳过，不中断整个循环
+- 自动检测详情页打开/关闭状态，关闭只点遮罩，稳定回列表看下一位
 
-## 增量策略（解决“老会话被顶到顶部”）
+## 安装
 
-- 每个左侧会话会生成 `session_key`（姓名+岗位）和 `signature`（会话预览+时间等）
-- 插件保存上次 `signature`
-- 本次扫描时：
-  - `signature` 未变化 -> 视为已处理，跳过
-  - `signature` 变化 -> 重新进入会话提取（适配 HR 新消息后被顶到顶部）
-
-## 安装（Edge）
-
-1. 打开 `edge://extensions`
-2. 开启「开发人员模式」
-3. 点击「加载解压缩的扩展」
-4. 选择目录：`/Users/rec/codex/boss_zhipin_exchange_plugin`
+1. 打开 `chrome://extensions`（Edge 则打开 `edge://extensions`）
+2. 开启右上角「开发者模式」
+3. 点击「加载已解压的扩展程序」
+4. 选择本插件目录（含 `manifest.json` 的目录）
 
 ## 使用步骤
 
-1. 在 Edge 打开并登录 BOSS：`https://www.zhipin.com/web/geek/chat`
+### 采集模式
+
+1. 打开并登录 BOSS：`https://www.zhipin.com/web/geek/chat`
 2. 手动切到「有交换」列表（建议）
 3. 点击插件图标打开侧边栏
-4. 先设置「账号隔离ID」（示例：`boss_a`、`boss_b`）
+4. 设置「账号隔离 ID」（示例：`boss_a`、`boss_b`）
 5. 点击「开始」启动采集（运行中同一按钮会变成「结束」）
-6. 完成后点击「导出CSV」
+6. 完成后点击「导出 CSV」
+
+### 打招呼模式（招聘端）
+
+1. 在插件侧边栏切换到**打招呼模式**
+2. 填写关键字（如「普拉提」）
+3. 打开招聘端页面并进入「推荐牛人」列表，等待候选人卡片出现
+4. 点击「开始」，插件自动逐个处理候选人
+5. 观察日志：每个候选人会显示「抓到正文(X字)」，命中显示「已打招呼」+ 命中位置，未命中显示「跳过（未命中关键字）」
+6. 运行结束或手动停止后，可查看本轮命中/跳过统计
 
 ## 数据存储位置
 
-- 浏览器本地 IndexedDB（按账号隔离ID分库）：
-  - 默认兼容旧数据：`boss_exchange_collector`
+- 浏览器本地 IndexedDB（按账号隔离 ID 分库）：
+  - `boss_exchange_collector`
   - `boss_exchange_collector__boss_a`
   - `boss_exchange_collector__boss_b`
 - 不上传云端
 
+## 注意事项
+
+- **封号风险**：自动打招呼存在账号风控风险，建议单日打招呼上限 30-50 次，话术不要带联系方式
+- **每次运行前**：修改代码后需在扩展管理页点击「重新加载」，并刷新招聘端页面，手动点入「推荐牛人」等列表出现后再开始
+- 招聘端候选人列表运行在动态 iframe 中，插件会自动定位；若遇到列表不加载，刷新页面重建 iframe 即可
+
 ## 主要文件
 
-- `manifest.json`：插件声明
-- `content.js`：页面侧逻辑（列表扫描、点会话、提取、滚动、高亮）
-- `sidepanel.js`：主控循环、增量判断、日志、导出
+- `manifest.json`：插件声明（含 `all_frames` 注入与 `webNavigation` 权限）
+- `content.js`：页面侧逻辑（详情采集、关键字匹配、公司名剥离、打招呼点击、关闭详情）
+- `sidepanel.js`：主控循环、iframe 帧定位、状态与日志、模式调度
+- `sidepanel.html` / `sidepanel.css`：侧边栏 UI（模式切换、关键字配置）
 - `db.js`：IndexedDB 封装
-- `sidepanel.html` / `sidepanel.css`：UI
 - `background.js`：插件入口和 side panel 打开逻辑
 
 ## 选择器变更时改哪里
 
 - 优先修改：`content.js`
-- 重点函数：
-  - `findLeftPanel`
-  - `listVisibleSessions`
-  - `findRightPanel`
-  - `JOB_SELECTORS` / `HR_SELECTORS`
-  - `extractWeChat` / `extractPhone`
+- 详情正文采集：`greetCollectDetailText`（TreeWalker 遍历 + 区块裁剪）
+- 期望职位/沟通进度屏蔽：`greetGetExpectJobBlockedAreas`
+- 公司名剥离：`stripCompanyNames`
+- 关键字匹配：`greetCheckKeywords`
+- 打开候选人：`greetOpenCandidate`（绝不点击头像）
+- 关闭详情：`greetCloseDetail`（只点遮罩）
+- 主循环与帧定位：`sidepanel.js` 的 `runGreeter` / `greetResolveFrameId`
