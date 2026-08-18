@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #efe4d6;
+      }
+    </style>
+    <title>BOSS采集助手</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body class="preload">
+    <div class="app">
+      <header class="topbar">
+        <h1>BOSS采集助手</h1>
+      </header>
+
+      <section class="card card-compact settings-card">
+        <div class="mode-switch">
+          <label class="mode-option">
+            <input type="radio" name="bzpMode" id="modeCollect" value="collect" checked />
+            <span>采集模式</span>
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="bzpMode" id="modeGreet" value="greet" />
+            <span>打招呼模式</span>
+          </label>
+        </div>
+        <div id="greetConfig" class="greet-config hidden">
+          <label>
+            <span>关键字（多个用逗号分隔）</span>
+            <input id="greetKeywords" type="text" placeholder="如：普拉提、瑜伽、健身" />
+          </label>
+          <label>
+            <span>打招呼话术</span>
+            <textarea id="greetMessage" rows="3" placeholder="您好，看到您的经历与我们的岗位很匹配，方便聊聊吗？"></textarea>
+          </label>
+          <label>
+            <span>最大打招呼数</span>
+            <input id="greetMax" type="number" min="1" value="50" />
+          </label>
+        </div>
+        <div class="grid settings-grid">
+          <label>
+            <span>账号隔离ID</span>
+            <input id="accountScope" type="text" placeholder="如 boss_a / boss_b" />
+          </label>
+          <label>
+            <span>最大处理条数</span>
+            <input id="maxItems" type="number" min="20" value="240" />
+          </label>
+          <label>
+            <span>空轮次数停止</span>
+            <input id="maxEmptyCycles" type="number" min="2" value="6" />
+          </label>
+        </div>
+        <div class="actions">
+          <button id="startBtn" class="btn primary">开始</button>
+          <button id="exportBtn" class="btn ghost">导出</button>
+          <button id="refreshBtn" class="btn ghost">刷新</button>
+          <button id="clearBtn" class="btn ghost danger-outline">清空历史</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="kpis">
+          <div><span>联系人总数</span><strong id="kpiTotal">0</strong></div>
+          <div><span>本轮已处理</span><strong id="kpiProcessed">0</strong></div>
+          <div><span>本轮新增</span><strong id="kpiSaved">0</strong></div>
+          <div><span>本轮跳过</span><strong id="kpiSkipped">0</strong></div>
+        </div>
+        <div class="status" id="statusBox">等待启动</div>
+      </section>
+
+      <section class="card">
+        <h2>日志</h2>
+        <pre id="logBox"></pre>
+      </section>
+
+      <section class="card">
+        <h2>运行记录</h2>
+        <div id="runsBox" class="runs"></div>
+      </section>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>
